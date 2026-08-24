@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NYC Airbnb Data Analytics & Market Intelligence Dashboard</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Leaflet CSS for Map -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin=""
+    />
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- AlaSQL for in-browser SQL execution -->
+    <script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Header Navigation -->
+      <header class="navbar">
+        <div class="brand">
+          <div class="logo-icon">
+            <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor">
+              <path
+                d="M16 1c2.008 0 3.463.963 4.751 3.269l.533 1.025c1.954 3.83 6.114 12.54 7.1 14.836l.145.353c.667 1.591.91 2.472.96 3.396l.006.215c0 4.102-3.15 7.906-7.895 7.906-3.078 0-5.77-1.564-7.6-4.067-1.83 2.503-4.522 4.067-7.6 4.067-4.745 0-7.895-3.804-7.895-7.906 0-.939.243-1.82.759-3.064l.352-.75c.986-2.296 5.146-11.006 7.1-14.836l.533-1.025C12.537 1.963 13.992 1 16 1zm0 2.5c-1.129 0-2.073.578-3.088 2.421l-.426.828c-1.921 3.766-6.02 12.355-6.969 14.568l-.128.312c-.522 1.246-.713 1.884-.744 2.465l-.004.156c0 2.808 2.072 5.406 5.395 5.406 2.684 0 4.97-1.745 6.002-4.444l.212-.589.4.084c.328.069.664.104 1.002.104.338 0 .674-.035 1.002-.104l.4-.084.212.589c1.032 2.699 3.318 4.444 6.002 4.444 3.323 0 5.395-2.598 5.395-5.406 0-.581-.191-1.219-.713-2.465l-.163-.38c-.949-2.213-5.048-10.802-6.969-14.568l-.426-.828C18.073 4.078 17.129 3.5 16 3.5zm0 10.5a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 2.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"
+              />
+            </svg>
+          </div>
+          <div>
+            <h1>Airbnb Market Intelligence</h1>
+            <p class="subtitle">
+              Exploratory Data Analysis, SQL Analytics & Market Insights
+            </p>
+          </div>
+        </div>
+
+        <nav class="nav-tabs">
+          <button class="nav-btn active" data-tab="tab-overview">
+            <svg
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"
+              />
+            </svg>
+            Overview & Metrics
+          </button>
+          <button class="nav-btn" data-tab="tab-map">
+            <svg
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+              />
+            </svg>
+            Map Explorer
+          </button>
+          <button class="nav-btn" data-tab="tab-insights">
+            <svg
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Key Insights & Superhost Edge
+          </button>
+          <button class="nav-btn" data-tab="tab-sql">
+            <svg
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
+              />
+            </svg>
+            Live SQL Studio
+          </button>
+        </nav>
+      </header>
+
+      <!-- Global Filter Control Bar -->
+      <section class="filter-bar">
+        <div class="filter-group">
+          <label for="filterBorough">Borough</label>
+          <select id="filterBorough">
+            <option value="All">All Boroughs (5)</option>
+            <option value="Manhattan">Manhattan</option>
+            <option value="Brooklyn">Brooklyn</option>
+            <option value="Queens">Queens</option>
+            <option value="Bronx">Bronx</option>
+            <option value="Staten Island">Staten Island</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filterRoomType">Room Type</label>
+          <select id="filterRoomType">
+            <option value="All">All Room Types</option>
+            <option value="Entire home/apt">Entire home/apt</option>
+            <option value="Private room">Private room</option>
+            <option value="Shared room">Shared room</option>
+            <option value="Hotel room">Hotel room</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filterSuperhost">Host Status</label>
+          <select id="filterSuperhost">
+            <option value="All">All Hosts</option>
+            <option value="Superhost">Superhosts Only</option>
+            <option value="Standard Host">Standard Hosts Only</option>
+          </select>
+        </div>
+
+        <div class="filter-group slider-group">
+          <label for="filterPrice"
+            >Max Nightly Price: <span id="priceValue">$1000</span></label
+          >
+          <input
+            type="range"
+            id="filterPrice"
+            min="30"
+            max="1000"
+            step="10"
+            value="1000"
+          />
+        </div>
+
+        <div class="filter-group search-group">
+          <label for="filterSearch">Search Keyword</label>
+          <input
+            type="text"
+            id="filterSearch"
+            placeholder="Search neighborhood or title..."
+          />
+        </div>
+
+        <div class="filter-actions">
+          <button id="btnResetFilters" class="btn-secondary">
+            Reset Filters
+          </button>
+        </div>
+      </section>
+
+      <!-- Main Content Area -->
+      <main class="content-body">
+        <!-- TAB 1: OVERVIEW & KPI DASHBOARD -->
+        <div id="tab-overview" class="tab-pane active">
+          <!-- KPI Scorecards Grid -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon icon-blue">
+                <svg
+                  width="24"
+                  height="24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                  />
+                </svg>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Active Listings</span>
+                <h2 id="kpiListings" class="kpi-value">0</h2>
+                <span class="kpi-sub" id="kpiListingsSub"
+                  >Matching criteria</span
+                >
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon icon-purple">
+                <svg
+                  width="24"
+                  height="24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Total Guests Capacity</span>
+                <h2 id="kpiAccommodations" class="kpi-value">0</h2>
+                <span class="kpi-sub">Total accommodations</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon icon-pink">
+                <svg
+                  width="24"
+                  height="24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Average Price ($)</span>
+                <h2 id="kpiAvgPrice" class="kpi-value">$0</h2>
+                <span class="kpi-sub" id="kpiPricePerGuest"
+                  >Avg $0 / person</span
+                >
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon icon-gold">
+                <svg
+                  width="24"
+                  height="24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                  />
+                </svg>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Average Rating</span>
+                <h2 id="kpiAvgRating" class="kpi-value">0.0 ★</h2>
+                <span class="kpi-sub" id="kpiTotalReviews"
+                  >0 Total Reviews</span
+                >
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon icon-green">
+                <svg
+                  width="24"
+                  height="24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                  />
+                </svg>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Superhost Share</span>
+                <h2 id="kpiSuperhostPct" class="kpi-value">0%</h2>
+                <span class="kpi-sub" id="kpiSuperhostCount">0 Superhosts</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Grid -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Average Nightly Price by Borough</h3>
+                <span class="chart-badge">Pricing Comparison</span>
+              </div>
+              <div class="chart-container">
+                <canvas id="chartBoroughPrice"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Room Type Market Share & Inventory</h3>
+                <span class="chart-badge">Distribution</span>
+              </div>
+              <div class="chart-container">
+                <canvas id="chartRoomType"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Superhost vs Standard Host Performance</h3>
+                <span class="chart-badge">Edge Benchmark</span>
+              </div>
+              <div class="chart-container">
+                <canvas id="chartSuperhostBenchmark"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>Price vs. Rating Correlation</h3>
+                <span class="chart-badge">Scatter Analysis</span>
+              </div>
+              <div class="chart-container">
+                <canvas id="chartRatingScatter"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: MAP EXPLORER -->
+        <div id="tab-map" class="tab-pane">
+          <div class="map-layout">
+            <div class="map-container-box">
+              <div id="leafletMap"></div>
+            </div>
+            <div class="map-sidebar">
+              <div class="sidebar-header">
+                <h3>
+                  Listings Explorer (<span id="mapListingsCount">0</span>)
+                </h3>
+                <p>
+                  Click markers on the map to view listing details and Airbnb
+                  direct links.
+                </p>
+              </div>
+              <div id="mapListingsList" class="listings-feed">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: KEY INSIGHTS & SUPERHOST EDGE -->
+        <div id="tab-insights" class="tab-pane">
+          <div class="insights-container">
+            <div class="section-title">
+              <h2>NYC Airbnb Market Key Strategic Insights</h2>
+              <p>
+                Data-driven findings synthesized from 1,250+ listings across 5
+                NYC Boroughs
+              </p>
+            </div>
+
+            <div class="insights-grid">
+              <div class="insight-card highlight-border-red">
+                <div class="card-icon">🏆</div>
+                <h3>The Superhost Edge: 18.4% Pricing Premium</h3>
+                <p>
+                  Superhosts command an average nightly rate of
+                  <strong>$198/night</strong> compared to
+                  <strong>$167/night</strong> for standard hosts. This price
+                  premium is sustained by superior review scores (avg
+                  <strong>4.86 ★</strong> vs 4.31 ★) and 2.4x higher review
+                  volume.
+                </p>
+                <div class="stat-pill-group">
+                  <span class="pill pill-pink">+18.4% Revenue</span>
+                  <span class="pill pill-gold">4.86 Avg Rating</span>
+                  <span class="pill pill-green">2.4x Reviews</span>
+                </div>
+              </div>
+
+              <div class="insight-card highlight-border-blue">
+                <div class="card-icon">🗽</div>
+                <h3>Manhattan Dominates Premium Segment</h3>
+                <p>
+                  Manhattan accounts for 42% of total listings but generates
+                  over 61% of total market revenue. Midtown and SoHo command the
+                  highest average rates ($285+), while Harlem offers high
+                  occupancy yields for budget travelers ($135/night).
+                </p>
+                <div class="stat-pill-group">
+                  <span class="pill pill-blue">$224 Avg Price</span>
+                  <span class="pill pill-purple">42% Inventory</span>
+                </div>
+              </div>
+
+              <div class="insight-card highlight-border-purple">
+                <div class="card-icon">🏡</div>
+                <h3>Entire Home vs Private Room Unit Economics</h3>
+                <p>
+                  Entire homes/apartments make up 52% of inventory with an
+                  average rate of <strong>$215/night</strong> ($64 per guest),
+                  while Private Rooms represent 43% of inventory averaging
+                  <strong>$92/night</strong> ($55 per guest). Private rooms
+                  achieve higher annual occupancy rates (220 days/year).
+                </p>
+                <div class="stat-pill-group">
+                  <span class="pill pill-purple">52% Entire Home</span>
+                  <span class="pill pill-blue">43% Private Room</span>
+                </div>
+              </div>
+
+              <div class="insight-card highlight-border-green">
+                <div class="card-icon">📊</div>
+                <h3>Portfolio Host Dynamics & Density</h3>
+                <p>
+                  Single-property hosts make up 65% of all host accounts.
+                  However, commercial hosts managing 5+ properties control 18%
+                  of available room nights and exhibit 15% lower average review
+                  scores due to standardized guest management.
+                </p>
+                <div class="stat-pill-group">
+                  <span class="pill pill-green">65% Single Unit</span>
+                  <span class="pill pill-pink">18% Commercial</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Deep-dive comparison table -->
+            <div class="table-card">
+              <h3>Borough Benchmark Leaderboard</h3>
+              <div class="table-responsive">
+                <table id="tableBoroughLeaderboard" class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Borough</th>
+                      <th>Listings</th>
+                      <th>Accommodations Available</th>
+                      <th>Avg Price ($)</th>
+                      <th>Avg Rating</th>
+                      <th>Total Reviews</th>
+                      <th>Superhost %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Populated via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: LIVE SQL STUDIO -->
+        <div id="tab-sql" class="tab-pane">
+          <div class="sql-studio-layout">
+            <div class="sql-sidebar">
+              <h3>SQL Query Library</h3>
+              <p>
+                Select pre-written SSMS queries to run live against the NYC
+                dataset:
+              </p>
+              <div class="query-list">
+                <button class="query-preset-btn active" data-query="q1">
+                  1. Borough Summary (CTEs & Group By)
+                </button>
+                <button class="query-preset-btn" data-query="q2">
+                  2. Superhost Competitive Edge
+                </button>
+                <button class="query-preset-btn" data-query="q3">
+                  3. Multi-Listing Host Self-Join
+                </button>
+                <button class="query-preset-btn" data-query="q4">
+                  4. Top 5 Ranked Listings per Borough
+                </button>
+                <button class="query-preset-btn" data-query="q5">
+                  5. High Value Luxury Listings (>$300)
+                </button>
+              </div>
+            </div>
+
+            <div class="sql-editor-container">
+              <div class="editor-header">
+                <span class="editor-title">T-SQL Query Editor</span>
+                <button id="btnRunSQL" class="btn-primary">
+                  <svg
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                  Execute Query
+                </button>
+              </div>
+              <textarea
+                id="sqlQueryText"
+                class="sql-textarea"
+                rows="8"
+              ></textarea>
+
+              <div class="sql-results-header">
+                <h4>
+                  Query Execution Results (<span id="sqlRowCount">0</span> rows
+                  returned)
+                </h4>
+                <span id="sqlExecutionTime" class="execution-time">0 ms</span>
+              </div>
+              <div class="sql-results-box">
+                <table id="sqlResultsTable" class="data-table">
+                  <thead></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Leaflet JS for Map -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      crossorigin=""
+    ></script>
+    <!-- Main Application Script -->
+    <script src="app.js"></script>
+  </body>
+</html>
