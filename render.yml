@@ -1,0 +1,17 @@
+# Render Blueprint configuration for NYC Airbnb Market Intelligence Dashboard
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: airbnb-market-intelligence
+    env: static
+    buildCommand: python3 generate_dataset_standalone.py && python3 eda_analysis.py
+    staticPublishPath: ./
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
